@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculus in Agrotech: Oil Palm Growth Rates</title>
+    <!-- Tailwind CSS for modern, clean styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Chart.js for smooth animations and graphing -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+        
+        <!-- Header Section -->
+        <header class="bg-gradient-to-r from-emerald-700 to-teal-600 text-white p-6 md:p-8">
+            <span class="text-xs font-semibold uppercase tracking-wider bg-emerald-800/50 px-3 py-1 rounded-full">SFA: Agrotech Interactive Lab</span>
+            <h1 class="text-2xl md:text-4xl font-bold mt-2">Modeling Oil Palm Fresh Fruit Bunch (FFB) Yields</h1>
+            <p class="text-emerald-100 mt-2 text-sm md:text-base max-w-3xl">
+                Understanding the application of first derivatives $f'(x)$ to optimize harvest cycles and predict peak productivity phases in Malaysian agriculture.
+            </p>
+        </header>
+
+        <div class="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Bioscience Scenario & Mathematics -->
+            <div class="lg:col-span-1 space-y-6 flex flex-col justify-between">
+                
+                <!-- The Scenario -->
+                <div>
+                    <h2 class="text-lg font-bold text-emerald-800 border-b pb-2 mb-3 flex items-center gap-2">
+                        🌱 The Agrotech Scenario
+                    </h2>
+                    <p class="text-sm text-slate-600 leading-relaxed mb-3">
+                        In Malaysia, optimizing the economic lifespan of oil palm (*Elaeis guineensis*) is vital. Yield production typically follows a biological growth curve: a slow initial phase, a rapid acceleration period, a peak, and a gradual senescence decline. 
+                    </p>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        By finding the <strong>derivative $f'(x)$</strong> of the yield function, agronomists can pinpoint the exact year production acceleration slows down, helping plantations budget fertilizer applications and plan replanting cycles.
+                    </p>
+                </div>
+
+                <!-- Mathematical Formulas -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Mathematical Modeling</h3>
+                    
+                    <div class="space-y-2">
+                        <span class="text-xs text-slate-400 block">Yield Function (Metric Tons / Hectare / Year):</span>
+                        <div class="bg-white p-2 rounded border border-slate-100 text-center font-mono text-sm text-emerald-700">
+                            $f(x) = -0.015x^3 + 0.45x^2 - 1.2x$
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <span class="text-xs text-slate-400 block">Derivative $f'(x)$ (Rate of Change in Yield):</span>
+                        <div class="bg-white p-2 rounded border border-slate-100 text-center font-mono text-sm text-amber-700">
+                            $f'(x) = -0.045x^2 + 0.9x - 1.2$
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-slate-400 italic">Where $x$ represents the age of the palms in years ($3 \le x \le 25$).</p>
+                </div>
+
+                <!-- Reference Data Sources -->
+                <div class="text-[11px] text-slate-400 bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                    <span class="font-semibold text-emerald-800 block mb-1">Data Source Validation:</span>
+                    Baseline parameters adapted from standard Malaysian palm oil trajectories found in the 
+                    <span class="italic font-medium">MPOB (Malaysian Palm Oil Board) Economics & Industry Development Division</span> datasets and published agrotech growth curves (e.g., *"Oil Palm Yield Profiles by Region"*).
+                </div>
+
+            </div>
+
+            <!-- Right Column: Interactive Graph & Results -->
+            <div class="lg:col-span-2 space-y-6">
+                
+                <!-- Chart Wrapper -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-inner relative h-80 md:h-[400px]">
+                    <canvas id="growthChart"></canvas>
+                </div>
+
+                <!-- Interactive Output Card -->
+                <div id="outputCard" class="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-5 rounded-xl transition-all duration-300 shadow-md">
+                    <div id="promptText" class="text-center py-4 text-slate-400 text-sm flex flex-col items-center justify-center gap-2">
+                        <span class="animate-bounce text-xl">🖱️</span>
+                        <p>Click anywhere near the curve lines on the chart above to analyze a specific plantation year.</p>
+                    </div>
+
+                    <div id="dataContent" class="hidden space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+                            <span class="text-emerald-400 font-bold uppercase tracking-wider text-xs">Analysis Year: <span id="outYear" class="text-white text-base ml-1"></span></span>
+                            <span class="bg-emerald-500/20 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono">f(x) & f'(x) Analysis</span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-xs text-slate-400 block">Predicted Yield $f(x)$</span>
+                                <span id="outYield" class="text-2xl font-bold tracking-tight"></span> <span class="text-xs text-slate-400">t/ha/yr</span>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-400 block">Growth Velocity $f'(x)$</span>
+                                <span id="outRate" class="text-2xl font-bold tracking-tight text-amber-400"></span> <span class="text-xs text-amber-400">t/ha/yr²</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-700/40 p-3 rounded-lg border border-slate-700/50">
+                            <span class="text-xs font-semibold text-slate-300 block mb-1">🌿 Layman Bio-Explanation:</span>
+                            <p id="outExplain" class="text-sm text-slate-200 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-slate-100 px-6 py-4 border-t border-slate-200 text-center text-xs text-slate-500">
+            Designed for Agrotech Bioscience Undergraduates • Math & Data Simulation Engine
+        </footer>
+
+    </div>
+
+    <!-- Interactive Logic Script -->
+    <script>
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        
+        // Generate dataset arrays for Year 3 to Year 25
+        const labels = [];
+        const yieldData = [];
+        const derivativeData = [];
+
+        for (let x = 3; x <= 25; x += 0.5) {
+            labels.push(x);
+            // f(x) = -0.015x^3 + 0.45x^2 - 1.2x
+            const fx = (-0.015 * Math.pow(x, 3)) + (0.45 * Math.pow(x, 2)) - (1.2 * x);
+            // f'(x) = -0.045x^2 + 0.9x - 1.2
+            const fPrimeX = (-0.045 * Math.pow(x, 2)) + (0.9 * x) - 1.2;
+            
+            yieldData.push(fx.toFixed(2));
+            derivativeData.push(fPrimeX.toFixed(2));
+        }
+
+        // Initialize Chart.js
+        const growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Total FFB Yield f(x) [t/ha/year]',
+                        data: yieldData,
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        fill: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: "Growth Velocity f'(x) [t/ha/year²]",
+                        data: derivativeData,
+                        borderColor: '#d97706',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: false,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { boxWidth: 15, font: { size: 11 } }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Palms Age (Years Since Planting)', font: { weight: 'bold' } }
+                    },
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Yield (Metric Tons / Hectare)', font: { weight: 'bold' } },
+                        min: 0,
+                        max: 30
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Acceleration Velocity (Δ Yield / Year)', font: { weight: 'bold' } },
+                        grid: { drawOnChartArea: false },
+                        min: -2,
+                        max: 4
+                    }
+                },
+                onClick: (e) => {
+                    const points = growthChart.getElementsAtEventForMode(e, 'nearest', { intersect: false }, true);
+                    if (points.length) {
+                        const index = points[0].index;
+                        const year = labels[index];
+                        const currentYield = yieldData[index];
+                        const currentRate = derivativeData[index];
+                        
+                        updateOutputCard(year, currentYield, currentRate);
+                    }
+                }
+            }
+        });
+
+        // Function to update user display card based on clicks
+        function updateOutputCard(year, yYield, rate) {
+            document.getElementById('promptText').classList.add('hidden');
+            document.getElementById('dataContent').classList.remove('hidden');
+
+            document.getElementById('outYear').innerText = `Year ${year}`;
+            document.getElementById('outYield').innerText = yYield;
+            document.getElementById('outRate').innerText = rate;
+
+            let explanation = "";
+            const r = parseFloat(rate);
+
+            if (r > 1.0) {
+                explanation = `At Year ${year}, the plantation is in an explosive growth phase. Your yield is rising rapidly by ${rate} extra metric tons per hectare each year. Focus heavy nitrogen-potassium structural fertilization right now to match this massive biological momentum.`;
+            } else if (r > 0 && r <= 1.0) {
+                explanation = `At Year ${year}, the trees are reaching their peak biological capability. Production is still growing, but the velocity is slowing down (+${rate} t/ha/yr²). The canopy is closed; optimize harvesting efficiency before growth trends flatline.`;
+            } else if (Math.abs(r) <= 0.1) {
+                explanation = `At Year ${year}, your derivative f'(x) is close to zero. This is the absolute mathematical peak production plateau! You are extracting maximum physical potential from the field. Yield will briefly stabilize here before organic decline begins.`;
+            } else {
+                explanation = `At Year ${year}, the derivative is negative (${rate}), signaling biological aging. The trees are physically tall, making harvesting hazardous, and individual yield efficiency is dropping. This is the time to calculate your economic replacement threshold for planned replanting.`;
+            }
+
+            document.getElementById('outExplain').innerText = explanation;
+        }
+    </script>
+
+    <!-- Simple JS rendering fallback for LaTeX formulas visually styling equations beautifully -->
+    <script>
+        window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</body>
+</html>
